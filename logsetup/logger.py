@@ -6,6 +6,12 @@ import threading
 import traceback
 import handlers
 
+try:
+	import notifiers.logging
+	_has_notifiers = True
+except (ImportError, ModuleNotFoundError):
+	_has_notifiers = False
+
 def ensure_threaded_excepthook():
 	# threading.excepthook is new as of version 3.8
 	# for previous versions, see python bug
@@ -157,6 +163,10 @@ def log_to_rotating_file(level, filename, maxBytes=0, backupCount=0, *args, **kw
 	return add_handler(logging.handlers.RotatingFileHandler, level, filename=filename, maxBytes=maxBytes, backupCount=backupCount, *args, **kwargs)
 
 
+def log_to_timed_rotating_file(level, filename, when="h", interval=1, backupCount=0, *args, **kwargs):
+	return add_handler(logging.handlers.TimedRotatingFileHandler, level, filename=filename, when=when, interval=interval, backupCount=backupCount, *args, **kwargs)
+
+
 def log_to_socket(level, host, port):
 	return add_handler(logging.handlers.SocketHandler, level, host=host, port=port)
 
@@ -166,7 +176,24 @@ def log_to_smtp(level, mailhost, fromaddr, toaddrs, subject, credentials=None, *
 
 
 def log_to_prowl(level, api_key, app_name, event, *args, **kwargs):
-	return add_handler(handlers.ProwlHandler, level, api_key, app_name, event, *args, **kwargs)
+	return add_handler(handlers.ProwlHandler, level, api_key=api_key, app_name=app_name, event=event, *args, **kwargs)
+
+
+def log_to_mailgun(level, api_key, sender, to, subject=None, domain=None, *args, **kwargs):
+	# attempt parsing a domain from the sender
+	# if none was specified
+	if not domain:
+		if not ("<" in sender and ">" in sender):
+			return
+		domain = sender[sender.find("@"):sender.find(">")][1:]
+	return add_handler(handlers.MailgunHandler, level, api_key=api_key, domain=domain, sender=sender, to=to, subject=subject, *args, **kwargs)
+
+
+def log_to_notifier(level, provider, defaults={}):
+	if not _has_notifiers:
+		log.warning("Attempted to register a third-party notification handler, but the notifiers package could not be found")
+		return
+	return add_handler(level, notifiers.logging.NotificationHandler, provider, defaults)
 
 
 def _excepthook(exctype, value, traceback):

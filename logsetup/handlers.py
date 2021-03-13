@@ -1,9 +1,10 @@
 """
-Additional handlers, not necessarily for use in loginit.
+Additional handlers, not necessarily for use in logsetup.
 """
 
 import logging
 import pyprowl
+import mailgun_api
 
 
 class ProwlHandler(logging.Handler):
@@ -55,5 +56,48 @@ class ProwlHandler(logging.Handler):
 			description = self.get_description(record)
 			prowl = pyprowl.Prowl(self.api_key, self.app_name)
 			prowl.notify(event=event, description=description, priority=self.priority, url=self.url, appName=self.app_name)
+		except:
+			self.handleError(record)
+
+class MailgunHandler(logging.Handler):
+	"""
+	Handler for sending emails with formatted log records using the Mailgun API
+
+	For more info, and to get an API key, check
+	https://www.mailgun.com/
+	"""
+	def __init__(self, api_key, domain, sender, to, subject=None, header=""):
+		logging.Handler.__init__(self)
+		self.api_key = api_key
+		self.domain = domain
+		self.sender = sender
+		self.to = to
+		self.subject = subject
+		self.header = header
+
+	def get_subject(self, record):
+		"""
+		Determine the subject for the email.
+
+		To specify a record-independent subject, override this method.
+		"""
+		return self.subject
+
+	def get_body(self, record):
+		"""
+		Determine the body for the email.
+
+		To specify a record-independent body, override this method.
+		This is commonly used to provide nonsensitive debug info
+		which may be of use when troubleshooting errors.
+		"""
+		return self.header + "\n" + self.format(record)
+
+	def emit(self, record):
+		try:
+			subject = self.get_subject(record)
+			body = self.get_body(record)
+			mg = mailgun_api.MailgunAPI(self.api_key, self.domain)
+			mg.send_message(self.sender, self.to, self.subject, body)
 		except:
 			self.handleError(record)
