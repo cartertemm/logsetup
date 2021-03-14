@@ -38,6 +38,16 @@ DEFAULT_DATEFMT = "%Y-%m-%d %H:%M:%S"
 exc_callback = None
 
 
+def set_level(level, logger=None):
+	"""
+	Convenience function to set the logging level of the root (or optionally a custom) logger.
+	level must be an int or str
+	"""
+	if not logger:
+		logger = log
+	logger.setLevel(level)
+
+
 def add_handler(cls, level, *args, **kwargs):
 	"""Add a handler to the route logger.
 	note: This function is only meant to be used when adding support for one shot invocation of new handlers.
@@ -165,7 +175,7 @@ def log_debug_info(level=logging.INFO):
 
 
 def init():
-	log.setLevel(logging.DEBUG)
+	set_level(logging.DEBUG)
 	log_to_stream(logging.DEBUG)
 	log_to_file(logging.ERROR, "errors.log")
 	log_unhandled_exceptions()
