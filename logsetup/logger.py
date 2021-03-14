@@ -166,7 +166,7 @@ def log_unhandled_exceptions(callback=None):
 
 def log_threaded_exceptions():
 	"""Start logging unhandled exceptions in threads other than the main one."""
-	threading.excepthook = compat._threaded_excepthook
+	threading.excepthook = _threaded_excepthook
 
 
 def log_debug_info(level=logging.INFO):
