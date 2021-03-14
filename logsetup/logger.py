@@ -1,10 +1,10 @@
 import sys
-import logging
 import logging.handlers
 import platform
 import threading
 import traceback
-import handlers
+from . import compat
+from . import handlers
 
 try:
 	import notifiers.logging
@@ -12,106 +12,26 @@ try:
 except (ImportError, ModuleNotFoundError):
 	_has_notifiers = False
 
-def ensure_threaded_excepthook():
-	# threading.excepthook is new as of version 3.8
-	# for previous versions, see python bug
-	# http://bugs.python.org/issue1230540
-	try:
-		threading.excepthook
-	except AttributeError:
-		# backport Python implementation
-		# mostly from lib/threading.py
-		from collections import namedtuple
-		_ExceptHookArgs = namedtuple('ExceptHookArgs', 'exc_type exc_value exc_traceback thread')
-		def ExceptHookArgs(args):
-			return _ExceptHookArgs(*args)
+# register module-level functions for all supported notifiers
+def _construct_notifier_func(provider_name):
+	def wrapper(level, **defaults):
+		if not _has_notifiers:
+			raise RuntimeError("the Notifiers package, required for the requested handler ("+provider_name+"), was not found. Make sure it is installed")
+		return add_handler(notifiers.logging.NotificationHandler, level, provider_name, defaults)
+	globals()["log_to_"+provider_name] = wrapper
+	wrapper.__name__ = "log_to_" + provider_name
+	wrapper.__doc__ = f"""Initializes a handler to send {provider_name} notifications for the requested level.
+		see the Notifiers docs for more info (including required parameters) at
+		https://notifiers.readthedocs.io/en/latest/providers/index.html"""
 
-		def _make_invoke_excepthook():
-			# Create a local namespace to ensure that variables remain alive
-			# when _invoke_excepthook() is called, even if it is called late during
-			# Python shutdown. It is mostly needed for daemon threads.
-			old_excepthook = excepthook
-			old_sys_excepthook = sys.excepthook
-			if old_excepthook is None:
-				raise RuntimeError("threading.excepthook is None")
-			if old_sys_excepthook is None:
-				raise RuntimeError("sys.excepthook is None")
-			sys_exc_info = sys.exc_info
-			local_print = print
-			local_sys = sys
-
-			def invoke_excepthook(thread):
-				try:
-					hook = threading.excepthook
-					if hook is None:
-						hook = old_excepthook
-					args = ExceptHookArgs([*sys_exc_info(), thread])
-					hook(args)
-				except Exception as exc:
-					exc.__suppress_context__ = True
-					del exc
-					if local_sys is not None and local_sys.stderr is not None:
-						stderr = local_sys.stderr
-					else:
-						stderr = thread._stderr
-					local_print("Exception in threading.excepthook:",
-								file=stderr, flush=True)
-					if local_sys is not None and local_sys.excepthook is not None:
-						sys_excepthook = local_sys.excepthook
-					else:
-						sys_excepthook = old_sys_excepthook
-					sys_excepthook(*sys_exc_info())
-				finally:
-					# Break reference cycle (exception stored in a variable)
-					args = None
-
-			return invoke_excepthook
-
-		def excepthook(args):
-			"""
-			Handle uncaught Thread.run() exception.
-			"""
-			if args.exc_type == SystemExit:
-				# silently ignore SystemExit
-				return
-			if sys is not None and sys.stderr is not None:
-				stderr = sys.stderr
-			elif args.thread is not None:
-				stderr = args.thread._stderr
-				if stderr is None:
-					# do nothing if sys.stderr is None and sys.stderr was None
-					# when the thread was created
-					return
-			else:
-				# do nothing if sys.stderr is None and args.thread is None
-				return
-			if args.thread is not None:
-				name = args.thread.name
-			else:
-				name = get_ident()
-			print(f"Exception in thread {name}:",
-					file=stderr, flush=True)
-			traceback.print_exception(args.exc_type, args.exc_value, args.exc_traceback,
-							 file=stderr)
-			stderr.flush()
-		threading.excepthook = excepthook
-
-		# monkeypatch Thread.run so that exceptions are properly sent
-		thread_init = threading.Thread.__init__
-		def __init__(self, *args, **kwargs):
-			thread_init(self, *args, **kwargs)
-			self._invoke_excepthook = _make_invoke_excepthook()
-			thread_run = self.run
-			def run_with_excepthook(*args2, **kwargs2):
-				try:
-					thread_run(*args2, **kwargs2)
-				except:
-					self._invoke_excepthook(self)
-			self.run = run_with_excepthook
-		threading.Thread.__init__ = __init__
+for provider in notifiers.all_providers():
+	# Mailgun support is currently implemented through another module
+	# as well as in Notifiers, and is thus excluded here
+	if provider == "mailgun":
+		continue
+	_construct_notifier_func(provider)
 
 
-ensure_threaded_excepthook()
 log = logging.getLogger()
 DEFAULT_FMT = "%(levelname)s %(name)s - %(module)s.%(funcName)s (%(asctime)s) - %(threadName)s (%(thread)d):\n%(message)s"
 DEFAULT_DATEFMT = "%Y-%m-%d %H:%M:%S"
@@ -193,7 +113,7 @@ def log_to_notifier(level, provider, defaults={}):
 	if not _has_notifiers:
 		log.warning("Attempted to register a third-party notification handler, but the notifiers package could not be found")
 		return
-	return add_handler(level, notifiers.logging.NotificationHandler, provider, defaults)
+	return add_handler(notifiers.logging.NotificationHandler, level, provider, defaults)
 
 
 def _excepthook(exctype, value, traceback):
@@ -236,7 +156,7 @@ def log_unhandled_exceptions(callback=None):
 
 def log_threaded_exceptions():
 	"""Start logging unhandled exceptions in threads other than the main one."""
-	threading.excepthook = _threaded_excepthook
+	threading.excepthook = compat._threaded_excepthook
 
 
 def log_debug_info(level=logging.INFO):
