@@ -97,8 +97,8 @@ def log_to_timed_rotating_file(level, filename, when="h", interval=1, backupCoun
 	return add_handler(logging.handlers.TimedRotatingFileHandler, level, filename=filename, when=when, interval=interval, backupCount=backupCount, *args, **kwargs)
 
 
-def log_to_socket(level, host, port):
-	return add_handler(logging.handlers.SocketHandler, level, host=host, port=port)
+def log_to_socket(level, host, port, *args, **kwargs):
+	return add_handler(logging.handlers.SocketHandler, level, host=host, port=port, *args, **kwargs)
 
 
 def log_to_smtp(level, mailhost, fromaddr, toaddrs, subject, credentials=None, *args, **kwargs):
