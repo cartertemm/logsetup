@@ -24,12 +24,13 @@ def _construct_notifier_func(provider_name):
 		see the Notifiers docs for more info (including required parameters) at
 		https://notifiers.readthedocs.io/en/latest/providers/index.html"""
 
-for provider in notifiers.all_providers():
-	# Mailgun support is currently implemented through another module
-	# as well as in Notifiers, and is thus excluded here
-	if provider == "mailgun":
-		continue
-	_construct_notifier_func(provider)
+if _has_notifiers:
+	for provider in notifiers.all_providers():
+		# Mailgun support is currently implemented through another module
+		# as well as in Notifiers, and is thus excluded here
+		if provider == "mailgun":
+			continue
+		_construct_notifier_func(provider)
 
 
 log = logging.getLogger()
