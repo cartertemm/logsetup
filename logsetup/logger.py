@@ -139,7 +139,7 @@ def _excepthook(exctype, value, traceback):
 	# when it would actually be preferable to point to the erroneous module and funcname itself
 	log.error("Unhandled exception", exc_info=(exctype, value, traceback))
 	if callable(exc_callback):
-		exc_callback(exctype, value, tb)
+		exc_callback(exctype, value, traceback)
 
 
 def _threaded_excepthook(args):
