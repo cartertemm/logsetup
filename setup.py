@@ -1,22 +1,20 @@
 from setuptools import find_packages, setup
 
 
-with open("readme.md", "r", encoding="utf-8") as f:
-	long_description = f.read()
-
 install_requires = [
 	"notifiers",
 	"mailgun_api @ git+https://github.com/accessibleapps/mailgun-API.git",
+	"pyprowl",
 ]
 
 
 setup(
 	name="logsetup",
-	version="1.0",
+	version="1.1",
 	author="Carter Temm",
 	author_email="cartertemm@gmail.com",
 	description="Python log initialization made easy",
-	long_description=long_description,
+	long_description=open("readme.md", encoding="utf-8").read(),
 	long_description_content_type="text/markdown",
 	url="https://github.com/cartertemm/logsetup",
 	install_requires=install_requires,
