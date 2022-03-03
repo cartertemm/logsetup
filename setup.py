@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 install_requires = [
 	"notifiers",
-	"mailgun_api @ git+https://github.com/accessibleapps/mailgun-API.git",
+	#"mailgun_api @ git+https://github.com/accessibleapps/mailgun-API.git",
 	"pyprowl",
 ]
 
