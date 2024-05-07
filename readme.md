@@ -1,8 +1,18 @@
+# LogSetup
+
 Logsetup eases the often tedious and repetitive process of log initialization, without compromising flexibility.
 
 It augments the builtin logging facility by providing a straightforward API, scores of seamless third-party integrations, thread-independent exception catching, and more.
 
 Never write another redundant logging procedure again.
+
+## Installation
+
+Just do:
+
+```
+pip install logsetup
+```
 
 ## why?
 
