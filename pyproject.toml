@@ -16,7 +16,6 @@ authors = [
     { name = "Carter Temm", email = "cartertemm@gmail.com" }
 ]
 dependencies = [
-    "mailgun_api @ git+https://github.com/accessibleapps/mailgun-API.git",
     "pyprowl"
 ]
 
