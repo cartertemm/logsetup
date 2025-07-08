@@ -1,9 +1,15 @@
 [project]
 name = "logsetup"
-version = "1.1"
+version = "1.2"
 description = "Python log initialization made easy"
 readme = "readme.md"
 requires-python = ">=3.8"
+classifiers = [
+	"Programming Language :: Python :: 3",
+	"Operating System :: OS Independent",
+	"Development Status :: 4 - Beta",
+	"Topic :: System :: Logging"
+]
 license = { text = "MIT" }
 authors = [
     { name = "Carter Temm", email = "cartertemm@gmail.com" }
