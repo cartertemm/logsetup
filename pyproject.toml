@@ -10,7 +10,8 @@ classifiers = [
 	"Development Status :: 4 - Beta",
 	"Topic :: System :: Logging"
 ]
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["license"]
 authors = [
     { name = "Carter Temm", email = "cartertemm@gmail.com" }
 ]
