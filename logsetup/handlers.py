@@ -4,7 +4,7 @@ Additional handlers, not necessarily for use in logsetup.
 
 import logging
 import pyprowl
-import mailgun_api
+from . import mailgun_api
 
 
 class ProwlHandler(logging.Handler):
