@@ -1,6 +1,6 @@
 [project]
 name = "logsetup"
-version = "1.4"
+version = "1.5"
 description = "Python log initialization made easy"
 readme = "readme.md"
 requires-python = ">=3.8"
