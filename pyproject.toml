@@ -16,7 +16,8 @@ authors = [
     { name = "Carter Temm", email = "cartertemm@gmail.com" }
 ]
 dependencies = [
-    "pyprowl"
+    "pyprowl",
+    "requests"
 ]
 
 [project.urls]
